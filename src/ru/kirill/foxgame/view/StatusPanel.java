@@ -6,8 +6,22 @@ import ru.kirill.foxgame.model.*;
 import javax.swing.*;
 import java.awt.*;
 
+
 /**
  * Панель статуса игры (верхняя панель).
+ * Отображает текущий счет игроков, фазу игры, текущего игрока и количество побед в кону.
+ * 
+ * <p>Панель разделена на пять равных секций:
+ * <ol>
+ *   <li>Счет игрока 1</li>
+ *   <li>Счет игрока 2</li>
+ *   <li>Текущий ход</li>
+ *   <li>Фаза игры</li>
+ *   <li>Победы в текущем кону</li>
+ * </ol>
+ * 
+ * @see GameFrame
+ * @see FoxGame
  */
 public class StatusPanel extends JPanel {
     private FoxGame game;
@@ -17,11 +31,20 @@ public class StatusPanel extends JPanel {
     private JLabel phaseLabel;
     private JLabel tricksLabel;
     
+    /**
+     * Создает панель статуса.
+     * 
+     * @param game экземпляр игры для отображения статуса, не может быть {@code null}
+     * @throws NullPointerException если {@code game} равен {@code null}
+     */
     public StatusPanel(FoxGame game) {
         this.game = game;
         initializeUI();
     }
     
+    /**
+     * Инициализирует пользовательский интерфейс панели.
+     */
     private void initializeUI() {
         setLayout(new GridLayout(1, 5, 10, 0));
         setBackground(new Color(70, 130, 180));
@@ -56,6 +79,13 @@ public class StatusPanel extends JPanel {
         update();
     }
     
+    /**
+     * Создает панель для отображения счета игрока.
+     * 
+     * @param playerName имя игрока
+     * @param player идентификатор игрока (для определения цвета)
+     * @return панель счета игрока
+     */
     private JPanel createScorePanel(String playerName, Player player) {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setOpaque(false);
@@ -80,6 +110,13 @@ public class StatusPanel extends JPanel {
         return panel;
     }
     
+    /**
+     * Создает панель для отображения информации о игре.
+     * 
+     * @param title заголовок информации
+     * @param value значение информации
+     * @return панель информации
+     */
     private JPanel createInfoPanel(String title, String value) {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setOpaque(false);
@@ -104,6 +141,9 @@ public class StatusPanel extends JPanel {
         return panel;
     }
     
+    /**
+     * Обновляет отображение панели в соответствии с текущим состоянием игры.
+     */
     public void update() {
         // Обновляем счет
         player1ScoreLabel.setText(String.valueOf(game.getState().getPlayer1Score()));

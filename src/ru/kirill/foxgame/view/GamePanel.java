@@ -4,22 +4,25 @@ import ru.kirill.foxgame.logic.FoxGame;
 import ru.kirill.foxgame.model.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-// package foxgame.view;
-
-// import foxgame.core.FoxGame;
-// import foxgame.model.*;
-// import javax.swing.*;
-// import java.awt.*;
-// import java.awt.event.ActionEvent;
-// import java.awt.event.ActionListener;
-// import java.util.List;
-
-/**
+ /**
  * Центральная панель игры, отображающая карты на столе и руки игроков.
+ * 
+ * <p>Панель разделена на три основные области:
+ * <ul>
+ *   <li>Север: рука противника (игрок 2)</li>
+ *   <li>Центр: игровой стол с картами текущего круга</li>
+ *   <li>Юг: рука текущего игрока (игрок 1)</li>
+ *   <li>Запад: панель козыря</li>
+ * </ul>
+ * 
+ * <p>Панель автоматически обновляет свое состояние при изменении игры.
+ * 
+ * @see FoxGame
+ * @see CardComponent
+ * @see GameFrame
  */
 public class GamePanel extends JPanel {
     private FoxGame game;
@@ -29,12 +32,22 @@ public class GamePanel extends JPanel {
     private JLabel trumpLabel;
     private Card selectedCard;
     
+    /**
+     * Создает игровую панель.
+     * 
+     * @param game экземпляр игры для отображения, не может быть {@code null}
+     * @throws NullPointerException если {@code game} равен {@code null}
+     */
     public GamePanel(FoxGame game) {
         this.game = game;
         this.selectedCard = null;
         initializeUI();
     }
     
+    /**
+     * Инициализирует пользовательский интерфейс окна.
+     * Настраивает менеджер компоновки, создает и размещает все панели.
+     */
     private void initializeUI() {
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(34, 139, 34)); // Зеленый фон как игровой стол
@@ -64,6 +77,11 @@ public class GamePanel extends JPanel {
         update();
     }
     
+    /**
+     * Создает панель для отображения козырной карты.
+     * 
+     * @return панель козыря
+     */
     private JPanel createTrumpPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -93,6 +111,19 @@ public class GamePanel extends JPanel {
         return panel;
     }
     
+    /**
+     * Обновляет отображение панели в соответствии с текущим состоянием игры.
+     * Этот метод вызывается контроллером после каждого изменения состояния игры.
+     * 
+     * <p>Обновляет:
+     * <ul>
+     *   <li>Козырную карту</li>
+     *   <li>Руки игроков</li>
+     *   <li>Карты на столе</li>
+     *   <li>Статус активности игроков</li>
+     *   <li>Текстовые подсказки</li>
+     * </ul>
+     */
     public void update() {
         // Обновляем козырь
         Card trumpCard = game.getTrumpCard();
@@ -127,20 +158,39 @@ public class GamePanel extends JPanel {
         }
     }
     
+    /**
+     * Устанавливает слушатель для обработки кликов по картам игрока.
+     * Слушатель будет вызываться при клике на любую доступную карту игрока 1.
+     * 
+     * @param listener слушатель событий ActionListener для обработки кликов по картам,
+     *                 не может быть {@code null}
+     * @throws NullPointerException если {@code listener} равен {@code null}
+     */
     public void setCardClickListener(ActionListener listener) {
         player1HandPanel.setCardClickListener(listener);
     }
     
+    /**
+     * Возвращает выбранную игроком карту.
+     * 
+     * @return выбранная карта или {@code null}, если карта не выбрана
+     */
     public Card getSelectedCard() {
         return selectedCard;
     }
     
+    /**
+     * Сбрасывает выделение карт.
+     * Убирает визуальное выделение со всех карт на панели.
+     */
     public void clearSelection() {
         selectedCard = null;
         player1HandPanel.clearSelection();
     }
     
-    // Внутренний класс для панели карт игрока
+    /**
+     * Панель для отображения руки игрока.
+     */
     private class CardPanel extends JPanel {
         private String playerName;
         private boolean interactive;
@@ -150,12 +200,22 @@ public class GamePanel extends JPanel {
         private List<Card> validMoves;
         private ActionListener cardClickListener;
         
+        /**
+         * Создает панель для руки игрока.
+         * 
+         * @param playerName имя игрока для отображения
+         * @param interactive {@code true} если панель интерактивна (для игрока-человека),
+         *                    {@code false} для противника (карты скрыты)
+         */
         public CardPanel(String playerName, boolean interactive) {
             this.playerName = playerName;
             this.interactive = interactive;
             initializeUI();
         }
         
+        /**
+         * Инициализирует пользовательский интерфейс панели.
+         */
         private void initializeUI() {
             setLayout(new BorderLayout(5, 5));
             setOpaque(false);
@@ -195,6 +255,12 @@ public class GamePanel extends JPanel {
             }
         }
         
+        /**
+         * Обновляет отображение карт на панели.
+         * 
+         * @param cards список карт для отображения
+         * @param validMoves список карт, которые можно сыграть (для интерактивной панели)
+         */
         public void updateCards(List<Card> cards, List<Card> validMoves) {
             this.validMoves = validMoves;
             cardsPanel.removeAll();
@@ -225,14 +291,30 @@ public class GamePanel extends JPanel {
             cardsPanel.repaint();
         }
         
+        /**
+         * Устанавливает слушатель для обработки кликов по картам.
+         * 
+         * @param listener слушатель событий ActionListener
+         */
         public void setCardClickListener(ActionListener listener) {
             this.cardClickListener = listener;
         }
         
+        /**
+         * Устанавливает текстовую подсказку для игрока.
+         * 
+         * @param hint текст подсказки
+         */
         public void setHint(String hint) {
             hintLabel.setText(hint);
         }
         
+        /**
+         * Устанавливает активность панели (для интерактивной панели).
+         * 
+         * @param active {@code true} если панель активна (ход игрока),
+         *               {@code false} в противном случае
+         */
         public void setActive(boolean active) {
             if (active) {
                 setBorder(BorderFactory.createLineBorder(new Color(255, 215, 0), 3));
@@ -241,6 +323,9 @@ public class GamePanel extends JPanel {
             }
         }
         
+        /**
+         * Сбрасывает выделение всех карт на панели.
+         */
         public void clearSelection() {
             for (Component comp : cardsPanel.getComponents()) {
                 if (comp instanceof CardComponent) {
@@ -250,17 +335,25 @@ public class GamePanel extends JPanel {
         }
     }
     
-    // Внутренний класс для панели стола
+    /**
+     * Панель для отображения карт на игровом столе.
+     */
     private class TablePanel extends JPanel {
         private CardComponent leadCardComponent;
         private CardComponent responseCardComponent;
         private JLabel roundLabel;
         private JLabel statusLabel;
         
+        /**
+         * Создает панель игрового стола.
+         */
         public TablePanel() {
             initializeUI();
         }
         
+        /**
+         * Инициализирует пользовательский интерфейс панели.
+         */
         private void initializeUI() {
             setLayout(new BorderLayout(20, 20));
             setOpaque(false);
@@ -317,6 +410,12 @@ public class GamePanel extends JPanel {
             add(cardsPanel, BorderLayout.CENTER);
         }
         
+        /**
+         * Создает слот для отображения карты на столе.
+         * 
+         * @param title название слота (Ведущий/Отвечающий)
+         * @return панель слота для карты
+         */
         private JPanel createCardSlot(String title) {
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -333,6 +432,12 @@ public class GamePanel extends JPanel {
             return panel;
         }
         
+        /**
+         * Обновляет отображение карт на столе.
+         * 
+         * @param leadCard карта ведущего
+         * @param responseCard карта отвечающего
+         */
         public void updateCards(Card leadCard, Card responseCard) {
             leadCardComponent.setCard(leadCard);
             responseCardComponent.setCard(responseCard);

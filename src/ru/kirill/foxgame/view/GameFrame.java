@@ -1,6 +1,7 @@
 package ru.kirill.foxgame.view;
 
 
+import ru.kirill.foxgame.controller.GameController;
 import ru.kirill.foxgame.logic.FoxGame;
 import ru.kirill.foxgame.model.*;
 import javax.swing.*;
@@ -8,8 +9,24 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
+
 /**
- * Главное окно игры.
+ * Главное окно приложения "Лисица на опушке".
+ * Собирает все компоненты интерфейса и предоставляет методы для управления ими.
+ * 
+ * <p>Окно разделено на четыре основные области:
+ * <ul>
+ *   <li>Север: {@link StatusPanel} - отображает текущий счет и статус игры</li>
+ *   <li>Центр: {@link GamePanel} - отображает игровое поле, карты на столе и руки игроков</li>
+ *   <li>Восток: {@link InfoPanel} - показывает историю кругов и активные эффекты</li>
+ *   <li>Юг: {@link ControlPanel} - содержит кнопки управления игрой</li>
+ * </ul>
+ * 
+ * @see StatusPanel
+ * @see GamePanel
+ * @see InfoPanel
+ * @see ControlPanel
+ * @see GameController
  */
 public class GameFrame extends JFrame {
     private FoxGame game;
@@ -22,6 +39,12 @@ public class GameFrame extends JFrame {
     private ActionListener rulesListener;
     private ActionListener cardClickListener;
     
+    
+    /**
+     * Создает главное окно игры.
+     *
+     * @param game экземпляр игры для отображения
+     */
     public GameFrame(FoxGame game) {
         this.game = game;
         initializeUI();
@@ -96,6 +119,9 @@ public class GameFrame extends JFrame {
         }
     }
     
+    /**
+     * Обновляет все компоненты интерфейса в соответствии с текущим состоянием игры.
+     */
     public void updateView() {
         statusPanel.update();
         gamePanel.update();
@@ -104,7 +130,11 @@ public class GameFrame extends JFrame {
         repaint();
     }
 
-    // Добавляем методы для установки слушателей
+    /**
+     * Устанавливает слушатель для обработки кликов по картам.
+     *
+     * @param listener слушатель событий ActionListener
+     */
     public void setCardClickListener(ActionListener listener) {
         this.cardClickListener = listener;
         if (gamePanel != null) {
@@ -112,6 +142,11 @@ public class GameFrame extends JFrame {
         }
     }
     
+    /**
+     * Устанавливает слушатель для кнопки "Новая игра".
+     *
+     * @param listener слушатель событий ActionListener
+     */
     public void setNewGameListener(ActionListener listener) {
         this.newGameListener = listener;
         if (controlPanel != null) {
@@ -119,6 +154,11 @@ public class GameFrame extends JFrame {
         }
     }
     
+    /**
+     * Устанавливает слушатель для кнопки "Правила".
+     *
+     * @param listener слушатель событий ActionListener
+     */
     public void setRulesListener(ActionListener listener) {
         this.rulesListener = listener;
         if (controlPanel != null) {
@@ -126,26 +166,29 @@ public class GameFrame extends JFrame {
         }
     }
     
-    // public void setCardClickListener(ActionListener listener) {
-    //     gamePanel.setCardClickListener(listener);
-    // }
-    
-    // public void setNewGameListener(ActionListener listener) {
-    //     controlPanel.setNewGameListener(listener);
-    // }
-    
-    // public void setRulesListener(ActionListener listener) {
-    //     controlPanel.setRulesListener(listener);
-    // }
-    
+    /**
+     * Показывает диалоговое окно с сообщением.
+     *
+     * @param message текст сообщения для отображения
+     * @param title заголовок диалогового окна
+     * @param messageType тип сообщения (JOptionPane.INFORMATION_MESSAGE, ERROR_MESSAGE и т.д.)
+     */
     public void showMessage(String message, String title, int messageType) {
         JOptionPane.showMessageDialog(this, message, title, messageType);
     }
     
+    /**
+     * Возвращает выбранную игроком карту.
+     *
+     * @return выбранная карта или null, если карта не выбрана
+     */
     public Card getSelectedCard() {
         return gamePanel.getSelectedCard();
     }
     
+    /**
+     * Сбрасывает выделение карт.
+     */
     public void clearSelection() {
         gamePanel.clearSelection();
     }

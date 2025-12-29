@@ -8,13 +8,18 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Компонент для отображения карты.
+ * Графический компонент для отображения игральной карты.
+ * Поддерживает два состояния: лицевая сторона и рубашка.
+ * Может быть интерактивным (кликабельным) или статическим.
+ * 
+ * <p>Компонент отображает карту с учетом её масти и достоинства.
+ * Нечетные карты помечаются специальными значками, указывающими на их эффекты.
+ * 
+ * @see Card
+ * @see CardEffect
  */
 public class CardComponent extends JButton {
     private Card card;
@@ -28,42 +33,13 @@ public class CardComponent extends JButton {
     private static final Color BELL_COLOR = new Color(0, 100, 0);   // Темно-зеленый
     private static final Color MOON_COLOR = new Color(72, 61, 139); // Темно-синий
     private static final Color BACK_COLOR = new Color(139, 0, 0);   // Темно-красный
-    
-    // public CardComponent(Card card, boolean faceUp) {
-    //     this.card = card;
-    //     this.faceUp = faceUp;
-    //     this.selected = false;
-        
-    //     setPreferredSize(new Dimension(80, 120));
-    //     setMinimumSize(new Dimension(70, 105));
-    //     setMaximumSize(new Dimension(90, 135));
-    //     setBorder(BorderFactory.createEmptyBorder());
-    //     setContentAreaFilled(false);
-    //     setFocusPainted(false);
-        
-    //     // Добавляем эффект при наведении
-    //     addMouseListener(new MouseAdapter() {
-    //         @Override
-    //         public void mouseEntered(MouseEvent e) {
-    //             if (isEnabled()) {
-    //                 setBorder(BorderFactory.createLineBorder(Color.YELLOW, 2));
-    //                 setLocation(getX(), getY() - 5);
-    //             }
-    //         }
-            
-    //         @Override
-    //         public void mouseExited(MouseEvent e) {
-    //             if (isEnabled()) {
-    //                 setBorder(BorderFactory.createEmptyBorder());
-    //                 if (!selected) {
-    //                     setLocation(getX(), getY() + 5);
-    //                 }
-    //             }
-    //         }
-    //     });
-    // }
 
-    // Добавляем поддержку ActionListener
+    /**
+     * Создает компонент карты.
+     *
+     * @param card карта для отображения (может быть null для пустого слота)
+     * @param faceUp true - отображать лицевую сторону, false - рубашку
+     */
     public CardComponent(Card card, boolean faceUp) {
         this.card = card;
         this.faceUp = faceUp;
@@ -123,20 +99,40 @@ public class CardComponent extends JButton {
         }
     }
     
+    /**
+     * Устанавливает карту для отображения.
+     *
+     * @param card новая карта для отображения
+     */
     public void setCard(Card card) {
         this.card = card;
         repaint();
     }
     
+    /**
+     * Возвращает отображаемую карту.
+     *
+     * @return текущая карта компонента
+     */
     public Card getCard() {
         return card;
     }
     
+    /**
+     * Устанавливает режим отображения карты.
+     *
+     * @param faceUp true - показывать лицевую сторону, false - показывать рубашку
+     */
     public void setFaceUp(boolean faceUp) {
         this.faceUp = faceUp;
         repaint();
     }
     
+    /**
+     * Устанавливает состояние выделения карты.
+     *
+     * @param selected true - карта выделена, false - не выделена
+     */
     public void setSelected(boolean selected) {
         this.selected = selected;
         if (selected) {
@@ -149,11 +145,21 @@ public class CardComponent extends JButton {
         repaint();
     }
     
+    /**
+     * Устанавливает прозрачность компонента.
+     *
+     * @param alpha значение прозрачности от 0.0 (полностью прозрачный) до 1.0 (полностью непрозрачный)
+     */
     public void setAlpha(float alpha) {
         this.alpha = Math.max(0.0f, Math.min(1.0f, alpha));
         repaint();
     }
     
+    /**
+     * Отрисовывает компонент карты.
+     * 
+     * @param g объект Graphics для отрисовки
+     */
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g.create();
@@ -186,6 +192,13 @@ public class CardComponent extends JButton {
         g2d.dispose();
     }
     
+    /**
+     * Отрисовывает лицевую сторону карты.
+     * 
+     * @param g2d объект Graphics2D для отрисовки
+     * @param width ширина компонента
+     * @param height высота компонента
+     */
     private void drawFaceUpCard(Graphics2D g2d, int width, int height) {
         // Определяем цвет масти
         Color suitColor;
@@ -246,6 +259,13 @@ public class CardComponent extends JButton {
         }
     }
     
+    /**
+     * Отрисовывает рубашку карты.
+     * 
+     * @param g2d объект Graphics2D для отрисовки
+     * @param width ширина компонента
+     * @param height высота компонента
+     */
     private void drawCardBack(Graphics2D g2d, int width, int height) {
         // Градиентный фон рубашки
         GradientPaint gradient = new GradientPaint(0, 0, BACK_COLOR, width, height, BACK_COLOR.darker());
@@ -284,6 +304,12 @@ public class CardComponent extends JButton {
         g2d.drawString(text, (width - textWidth) / 2, height / 2 + 30);
     }
     
+    /**
+     * Возвращает символ эмодзи для указанной масти.
+     * 
+     * @param suit масть карты
+     * @return символ эмодзи для масти
+     */
     private String getSuitSymbol(Suit suit) {
         switch (suit) {
             case KEY: return "🗝️";
@@ -293,6 +319,12 @@ public class CardComponent extends JButton {
         }
     }
     
+    /**
+     * Возвращает символ эмодзи для эффекта карты указанного достоинства.
+     * 
+     * @param rank достоинство карты
+     * @return символ эмодзи для эффекта карты или пустая строка для карт без эффекта
+     */
     private String getEffectIcon(Rank rank) {
         switch (rank) {
             case ONE: return "🦢";    // Лебедь
@@ -305,6 +337,11 @@ public class CardComponent extends JButton {
         }
     }
     
+    /**
+     * Включает или выключает компонент карты.
+     * 
+     * @param enabled {@code true} для включения компонента, {@code false} для выключения
+     */
     @Override
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);

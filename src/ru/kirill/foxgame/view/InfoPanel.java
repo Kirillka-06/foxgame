@@ -6,16 +6,21 @@ import ru.kirill.foxgame.model.*;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-// package foxgame.view;
 
-// import foxgame.core.FoxGame;
-// import foxgame.model.*;
-// import javax.swing.*;
-// import javax.swing.border.TitledBorder;
-// import java.awt.*;
 
 /**
  * Боковая панель с дополнительной информацией.
+ * Отображает историю кругов, активные эффекты и доступные ходы.
+ * 
+ * <p>Панель содержит три секции:
+ * <ol>
+ *   <li>История кругов - показывает результаты всех сыгранных кругов в текущем кону</li>
+ *   <li>Активные эффекты - показывает текущие активные эффекты карт</li>
+ *   <li>Доступные ходы - показывает карты, которые текущий игрок может сыграть</li>
+ * </ol>
+ * 
+ * @see GameFrame
+ * @see FoxGame
  */
 public class InfoPanel extends JPanel {
     private FoxGame game;
@@ -23,11 +28,20 @@ public class InfoPanel extends JPanel {
     private JTextArea effectArea;
     private JList<String> validMovesList;
     
+    /**
+     * Создает информационную панель.
+     * 
+     * @param game экземпляр игры для отображения информации, не может быть {@code null}
+     * @throws NullPointerException если {@code game} равен {@code null}
+     */
     public InfoPanel(FoxGame game) {
         this.game = game;
         initializeUI();
     }
     
+    /**
+     * Инициализирует пользовательский интерфейс панели.
+     */
     private void initializeUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(new Color(245, 245, 245));
@@ -48,6 +62,11 @@ public class InfoPanel extends JPanel {
         update();
     }
     
+    /**
+     * Создает панель истории кругов.
+     * 
+     * @return панель истории кругов
+     */
     private JPanel createHistoryPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
@@ -73,7 +92,12 @@ public class InfoPanel extends JPanel {
         
         return panel;
     }
-    
+
+    /**
+     * Создает панель активных эффектов.
+     * 
+     * @return панель активных эффектов
+     */
     private JPanel createEffectsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
@@ -97,6 +121,11 @@ public class InfoPanel extends JPanel {
         return panel;
     }
     
+    /**
+     * Создает панель доступных ходов.
+     * 
+     * @return панель доступных ходов
+     */
     private JPanel createValidMovesPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
@@ -122,6 +151,9 @@ public class InfoPanel extends JPanel {
         return panel;
     }
     
+    /**
+     * Обновляет всю информацию на панели.
+     */
     public void update() {
         // Обновляем историю
         updateHistory();
@@ -133,6 +165,9 @@ public class InfoPanel extends JPanel {
         updateValidMoves();
     }
     
+    /**
+     * Обновляет отображение истории кругов.
+     */
     private void updateHistory() {
         StringBuilder history = new StringBuilder();
         var trickHistory = game.getTrickHistory();
@@ -148,10 +183,14 @@ public class InfoPanel extends JPanel {
             }
         }
         
+        
         historyArea.setText(history.toString());
         historyArea.setCaretPosition(0);
     }
     
+    /**
+     * Обновляет отображение активных эффектов.
+     */
     private void updateEffects() {
         StringBuilder effects = new StringBuilder();
         
@@ -179,6 +218,9 @@ public class InfoPanel extends JPanel {
         effectArea.setText(effects.toString());
     }
     
+    /**
+     * Обновляет отображение доступных ходов.
+     */
     private void updateValidMoves() {
         Player currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == Player.PLAYER_1) {

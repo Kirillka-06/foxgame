@@ -1,10 +1,21 @@
-package ru.kirill.oop_task2_2.logic;
+package ru.kirill.foxgame.logic;
 
-import ru.kirill.oop_task2_2.model.*;
+
+import ru.kirill.foxgame.controller.GameController;
+import ru.kirill.foxgame.model.*;
 import java.util.*;
 
+
 /**
- * Основной класс игры, управляющий всей логикой.
+ * Основной класс, управляющий логикой игры "Лисица на опушке".
+ * Обрабатывает все игровые механики, ходы игроков, эффекты карт и подсчет очков.
+ * 
+ * <p>Этот класс представляет собой ядро игры и содержит всю бизнес-логику.
+ * Он взаимодействует с моделью ({@link GameState}) и управляется контроллером
+ * ({@link GameController}).
+ * 
+ * @see GameState
+ * @see GameController
  */
 public class FoxGame {
     private GameState state;
@@ -13,7 +24,10 @@ public class FoxGame {
     private List<TrickResult> trickHistory;
     private boolean effectAppliedThisRound;
     private Card discardedWoodcutterCard;
-    
+
+    /**
+     * Создает новую игру и инициализирует начальное состояние.
+     */
     public FoxGame() {
         this.state = new GameState();
         this.currentPhase = GamePhase.DEALING;
@@ -34,6 +48,16 @@ public class FoxGame {
     
     /**
      * Начинает новый кон (раунд).
+     * В кону разыгрывается 13 кругов, после чего подсчитываются очки.
+     * 
+     * <p>В начале кона:
+     * <ol>
+     *   <li>Сбрасывается счетчик побед в кону</li>
+     *   <li>Определяется новый сдающий</li>
+     *   <li>Раздаются карты</li>
+     *   <li>Определяется козырная карта</li>
+     *   <li>Устанавливается первый ведущий (соперник сдающего)</li>
+     * </ol>
      */
     public void startNewCon() {
         // Сбрасываем состояние для нового кона
@@ -62,7 +86,16 @@ public class FoxGame {
     }
     
     /**
-     * Раздает карты игрокам.
+     * Раздает карты игрокам и формирует колоду.
+     * 
+     * <p>Процесс раздачи:
+     * <ol>
+     *   <li>Создается полная колода из 33 карт (3 масти × 11 достоинств)</li>
+     *   <li>Колода перемешивается</li>
+     *   <li>Каждому игроку раздается по 13 карт</li>
+     *   <li>Из оставшихся 7 карт формируется колода</li>
+     *   <li>Верхняя карта колоды становится козырной</li>
+     * </ol>
      */
     private void dealCards() {
         // Создаем полную колоду из 33 карт
@@ -104,7 +137,11 @@ public class FoxGame {
     }
     
     /**
-     * Игрок делает ход (играет карту).
+     * Обрабатывает ход игрока: разыгрывает карту с учетом правил и эффектов.
+     *
+     * @param player игрок, делающий ход
+     * @param card карта, которую играет игрок
+     * @return true, если ход успешен, false если ход недопустим
      */
     public boolean playCard(Player player, Card card) {
         if (!isValidMove(player, card)) {
@@ -146,7 +183,26 @@ public class FoxGame {
     }
     
     /**
-     * Применяет эффект карты.
+     * Применяет эффект карты в соответствии с её достоинством.
+     * 
+     * <p>Вызывается в момент разыгрывания карты игроком.
+     * Определяет, какой эффект соответствует карте, и вызывает соответствующий
+     * метод обработки эффекта.
+     * 
+     * <p><b>Особые эффекты по достоинствам карт:</b>
+     * <ul>
+     *   <li><b>1 (Лебедь)</b>: {@link #applySwanEffect(Card, Player)}</li>
+     *   <li><b>3 (Лиса)</b>: {@link #applyFoxEffect(Card, Player)}</li>
+     *   <li><b>5 (Дровосек)</b>: {@link #applyWoodcutterEffect(Card, Player)}</li>
+     *   <li><b>7 (Страж)</b>: {@link #applyGuardEffect(Card, Player)}</li>
+     *   <li><b>9 (Ведьма)</b>: {@link #applyWitchEffect(Card, Player)}</li>
+     *   <li><b>11 (Лунатик)</b>: {@link #applyLunaticEffect(Card, Player)}</li>
+     * </ul>
+     * Четные карты (2, 4, 6, 8, 10) не имеют эффектов.
+     * 
+     * @param card карта, эффект которой нужно применить, не может быть {@code null}
+     * @param player игрок, разыгравший карту, не может быть {@code null}
+     * @throws NullPointerException если {@code card} или {@code player} равны {@code null}
      */
     private void applyCardEffect(Card card, Player player) {
         if (!card.isOdd()) {
@@ -182,7 +238,16 @@ public class FoxGame {
     }
     
     /**
-     * Эффект Лебедя (1).
+     * Применяет эффект карты "Лебедь" (достоинство 1).
+     * Особое правило: если оба игрока сыграли карты достоинством 1,
+     * следующим ведущим становится проигравший текущий круг.
+     * Эффект обрабатывается при завершении круга в методе {@link #determineNextLeader}.
+     * 
+     * @param card карта "Лебедь", которая была разыграна
+     * @param player игрок, разыгравший карту "Лебедь"
+     * 
+     * @see #determineNextLeader(Player, Card, Card)
+     * @see Rank#ONE
      */
     private void applySwanEffect(Card card, Player player) {
         // Эффект применяется при завершении круга
@@ -190,12 +255,17 @@ public class FoxGame {
     }
     
     /**
-     * Эффект Лисы (3).
+     * Применяет эффект карты "Лиса" (достоинство 3).
+     * Меняет козырную масть на масть сыгранной карты.
+     * Эффект применяется немедленно и влияет на определение победителя текущего круга.
+     * 
+     * @param card карта "Лиса", которая была разыграна
+     * @param player игрок, разыгравший карту "Лиса"
+     * 
+     * @see Rank#THREE
+     * @see GameState#setTrumpCard(Card)
      */
     private void applyFoxEffect(Card card, Player player) {
-        // Лиса меняет козырь
-        // Игрок выбирает новую карту для козыря из своей руки
-        // В текущей реализации автоматически выбираем первую доступную карту
         List<Card> hand = state.getHand(player);
         for (Card c : hand) {
             if (!c.equals(card)) {
@@ -207,15 +277,21 @@ public class FoxGame {
     }
     
     /**
-     * Эффект Дровосека (5).
+     * Применяет эффект карты "Дровосек" (достоинство 5).
+     * Заставляет соперника сбросить случайную карту из своей руки.
+     * Сброшенная карта удаляется из игры и не участвует в дальнейших кругах.
+     * 
+     * @param card карта "Дровосек", которая была разыграна
+     * @param player игрок, разыгравший карту "Дровосек"
+     * 
+     * @see Rank#FIVE
+     * @see GameState#removeCardFromHand(Player, Card)
      */
     private void applyWoodcutterEffect(Card card, Player player) {
-        // Дровосек заставляет соперника сбросить случайную карту
         Player opponent = player.opponent();
         List<Card> opponentHand = state.getHand(opponent);
         
         if (!opponentHand.isEmpty()) {
-            // Выбираем случайную карту для сброса
             int index = random.nextInt(opponentHand.size());
             discardedWoodcutterCard = opponentHand.get(index);
             state.removeCardFromHand(opponent, discardedWoodcutterCard);
@@ -223,26 +299,48 @@ public class FoxGame {
     }
     
     /**
-     * Эффект Ведьмы (9).
+     * Применяет эффект карты "Ведьма" (достоинство 9).
+     * Помечает, что в текущем круге сыграна карта "Ведьма".
+     * Если в круге сыграна только одна "Ведьма", она становится козырем.
+     * Если сыграны две "Ведьмы", эффект нейтрализуется.
+     * 
+     * @param card карта "Ведьма", которая была разыграна
+     * @param player игрок, разыгравший карту "Ведьма"
+     * 
+     * @see Rank#NINE
+     * @see #determineRoundWinnerWithEffects(Card, Card, Suit)
      */
     private void applyWitchEffect(Card card, Player player) {
-        // Ведьма становится козырем, если она одна на столе
         state.setWitchEffectActive(true);
     }
     
     /**
-     * Эффект Стража (7).
+     * Применяет эффект карты "Страж" (достоинство 7).
+     * Блокирует эффекты других особых карт в текущем круге.
+     * Если "Страж" сыгран отвечающим, он блокирует эффект карты ведущего.
+     * 
+     * @param card карта "Страж", которая была разыграна
+     * @param player игрок, разыгравший карту "Страж"
+     * 
+     * @see Rank#SEVEN
      */
     private void applyGuardEffect(Card card, Player player) {
-        // Страж блокирует эффекты других карт в этом круге
         if (state.isWaitingForResponse()) {
-            // Если стража играет отвечающий, он блокирует эффект карты ведущего
             effectAppliedThisRound = false;
         }
     }
     
     /**
-     * Эффект Лунатика (11).
+     * Применяет эффект карты "Лунатик" (достоинство 11).
+     * Заставляет игроков обменяться случайными картами из своих рук.
+     * Количество обмениваемых карт: минимум из 3 и количества карт в руках игроков.
+     * Эффект применяется только когда карту разыгрывает ведущий игрок.
+     * 
+     * @param card карта "Лунатик", которая была разыграна
+     * @param player игрок, разыгравший карту "Лунатик"
+     * 
+     * @see Rank#ELEVEN
+     * @see #exchangeRandomCards(Player)
      */
     private void applyLunaticEffect(Card card, Player player) {
         // Лунатика заставляет игроков поменяться несколькими случайными картами
@@ -254,6 +352,9 @@ public class FoxGame {
     
     /**
      * Обмен случайными картами между игроками (эффект Лунатика).
+     * Игроки обмениваются до 3 случайными картами (или меньше, если у кого-то меньше карт).
+     * 
+     * @param player игрок, разыгравший карту "Лунатик"
      */
     private void exchangeRandomCards(Player player) {
         List<Card> playerHand = state.getHand(player);
@@ -286,6 +387,16 @@ public class FoxGame {
     
     /**
      * Завершает текущий круг.
+     * Определяет победителя круга, обновляет счетчики побед и готовит игру к следующему кругу.
+     * 
+     * <p>В процессе завершения круга:
+     * <ol>
+     *   <li>Определяется победитель круга с учетом эффектов карт</li>
+     *   <li>Определяется следующий ведущий</li>
+     *   <li>Обновляются счетчики побед игроков</li>
+     *   <li>Результат круга сохраняется в историю</li>
+     *   <li>Проверяется, не завершен ли кон (13 кругов сыграно)</li>
+     * </ol>
      */
     private void completeRound() {
         Card lead = state.getLeadCard();
@@ -325,7 +436,13 @@ public class FoxGame {
     }
     
     /**
-     * Определяет победителя круга с учетом всех эффектов.
+     * Определяет победителя круга с учетом всех эффектов карт.
+     * 
+     * @param lead карта ведущего игрока, не может быть {@code null}
+     * @param response карта отвечающего игрока, не может быть {@code null}
+     * @param trumpSuit текущая козырная масть, может быть {@code null}
+     * @return победитель круга
+     * @throws NullPointerException если {@code lead} или {@code response} равны {@code null}
      */
     private Player determineRoundWinnerWithEffects(Card lead, Card response, Suit trumpSuit) {
         // Учитываем эффект Ведьмы
@@ -345,7 +462,10 @@ public class FoxGame {
     }
     
     /**
-     * Определяет, какой игрок сыграл карту.
+     * Определяет, какой игрок сыграл указанную карту.
+     * 
+     * @param card карта, для которой нужно определить игрока, не может быть {@code null}
+     * @return игрок, сыгравший эту карту, или {@code null} если карта не распознана
      */
     private Player getPlayerByCard(Card card) {
         if (card.equals(state.getLeadCard())) {
@@ -357,7 +477,16 @@ public class FoxGame {
     }
     
     /**
-     * Определяет следующего ведущего с учетом эффектов.
+     * Определяет следующего ведущего с учетом эффектов карт.
+     * 
+     * <p>Учитывает эффект Лебедя: если оба игрока сыграли карты достоинством 1,
+     * ведущим становится проигравший текущий круг.
+     * 
+     * @param roundWinner победитель текущего круга, не может быть {@code null}
+     * @param lead карта ведущего, не может быть {@code null}
+     * @param response карта отвечающего, не может быть {@code null}
+     * @return следующий ведущий игрок
+     * @throws NullPointerException если любой из параметров равен {@code null}
      */
     private Player determineNextLeader(Player roundWinner, Card lead, Card response) {
         // Проверяем эффект Лебедя
@@ -372,6 +501,14 @@ public class FoxGame {
     
     /**
      * Завершает кон и подсчитывает очки.
+     * 
+     * <p>В процессе завершения кона:
+     * <ol>
+     *   <li>Подсчитываются очки для каждого игрока по таблице очков</li>
+     *   <li>Очки добавляются к общему счету</li>
+     *   <li>Проверяется, достиг ли кто-либо из игроков 21 очка</li>
+     *   <li>Если да - игра завершается, иначе начинается новый кон</li>
+     * </ol>
      */
     private void endCon() {
         currentPhase = GamePhase.ROUND_SCORING;
@@ -398,6 +535,7 @@ public class FoxGame {
     
     /**
      * Завершает игру.
+     * Устанавливает фазу игры в {@link GamePhase#GAME_OVER} и помечает игру как завершенную.
      */
     private void endGame() {
         currentPhase = GamePhase.GAME_OVER;
@@ -406,6 +544,18 @@ public class FoxGame {
     
     /**
      * Проверяет, является ли ход допустимым.
+     * 
+     * <p>Ход считается допустимым, если:
+     * <ol>
+     *   <li>Игрок делает ход в свой ход</li>
+     *   <li>Карта есть у игрока на руке</li>
+     *   <li>Для отвечающего: если есть карта ведущей масти, должен играть ее</li>
+     * </ol>
+     * 
+     * @param player игрок, делающий ход, не может быть {@code null}
+     * @param card карта, которую хочет сыграть игрок, не может быть {@code null}
+     * @return {@code true} если ход допустим, {@code false} в противном случае
+     * @throws NullPointerException если {@code player} или {@code card} равны {@code null}
      */
     private boolean isValidMove(Player player, Card card) {
         // Проверяем, что игрок делает ход в свой ход
@@ -436,7 +586,9 @@ public class FoxGame {
     }
     
     /**
-     * Возвращает козырную масть с учетом эффектов.
+     * Возвращает текущее козырную масть с учетом активных эффектов.
+     *
+     * @return текущая козырная масть
      */
     public Suit getCurrentTrumpSuit() {
         if (state.getNewTrumpFromEffect() != null) {
@@ -446,7 +598,10 @@ public class FoxGame {
     }
     
     /**
-     * Получает список доступных ходов для игрока.
+     * Возвращает список допустимых ходов для указанного игрока.
+     *
+     * @param player игрок, для которого нужно получить допустимые ходы
+     * @return список карт, которые игрок может легально сыграть
      */
     public List<Card> getValidMoves(Player player) {
         List<Card> validMoves = new ArrayList<>();
@@ -477,7 +632,9 @@ public class FoxGame {
     }
     
     /**
-     * Получает текущий счет игры.
+     * Возвращает текстовую сводку текущего счета игры.
+     * 
+     * @return строка с информацией о счете обоих игроков
      */
     public String getScoreSummary() {
         return String.format("Игрок 1: %d очков (%d побед)\nИгрок 2: %d очков (%d побед)",
@@ -486,7 +643,9 @@ public class FoxGame {
     }
     
     /**
-     * Получает описание текущего состояния игры.
+     * Возвращает описание текущего состояния игры.
+     * 
+     * @return строка с информацией о текущей фазе, игроке, круге и козыре
      */
     public String getGameStatus() {
         StringBuilder status = new StringBuilder();
@@ -507,7 +666,11 @@ public class FoxGame {
         return status.toString();
     }
     
-    // Геттеры
+    /**
+     * Возвращает текущее состояние игры (защищенную копию).
+     *
+     * @return копия текущего состояния игры
+     */
     public GameState getState() {
         return state.copy(); // Возвращаем копию для безопасности
     }
@@ -516,14 +679,29 @@ public class FoxGame {
         return currentPhase;
     }
     
+    /**
+     * Возвращает текущего игрока (чей ход сейчас).
+     *
+     * @return текущий игрок
+     */
     public Player getCurrentPlayer() {
         return state.getCurrentPlayer();
     }
     
+    /**
+     * Возвращает текущую козырную карту.
+     *
+     * @return козырная карта
+     */
     public Card getTrumpCard() {
         return state.getTrumpCard();
     }
     
+    /**
+     * Проверяет, завершена ли игра.
+     *
+     * @return true, если игра завершена (кто-то набрал 21+ очков)
+     */
     public boolean isGameOver() {
         return state.isGameOver();
     }
@@ -538,32 +716,61 @@ public class FoxGame {
         } else if (state.getPlayer2Score() > state.getPlayer1Score()) {
             return Player.PLAYER_2;
         } else {
-            // Ничья - победитель по очкам в последнем кону
-            // В текущей реализации просто возвращаем null
             return null;
         }
     }
     
+    /**
+     * Возвращает историю всех сыгранных кругов в текущем кону.
+     *
+     * @return список результатов кругов
+     */
     public List<TrickResult> getTrickHistory() {
         return new ArrayList<>(trickHistory);
     }
     
+    /**
+     * Проверяет, ожидает ли игра ответа от отвечающего игрока.
+     *
+     * @return true, если ведущий сыграл карту и ожидается ответ
+     */
     public boolean isWaitingForResponse() {
         return state.isWaitingForResponse();
     }
     
+    /**
+     * Возвращает карту, которую сыграл ведущий в текущем круге.
+     *
+     * @return карта ведущего или null, если круг еще не начат
+     */
     public Card getLeadCard() {
         return state.getLeadCard();
     }
     
+    /**
+     * Возвращает карту, которую сыграл отвечающий в текущем круге.
+     *
+     * @return карта отвечающего или null, если ответ еще не дан
+     */
     public Card getResponseCard() {
         return state.getResponseCard();
     }
     
+    /**
+     * Возвращает карту, сброшенную эффектом Дровосека.
+     * 
+     * @return сброшенная карта или {@code null}, если эффект Дровосека не применялся
+     */
     public Card getDiscardedWoodcutterCard() {
         return discardedWoodcutterCard;
     }
     
+    /**
+     * Проверяет, был ли применен эффект карты в текущем круге.
+     * 
+     * @return {@code true} если в текущем круге был применен эффект карты,
+     *         {@code false} в противном случае
+     */
     public boolean isEffectAppliedThisRound() {
         return effectAppliedThisRound;
     }

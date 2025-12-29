@@ -1,8 +1,8 @@
 package ru.kirill.foxgame.controller;
 
-import ru.kirill.oop_task2_2.logic.FoxGame;
-import ru.kirill.oop_task2_2.model.*;
-import ru.kirill.oop_task2_2.view.GameFrame;
+import ru.kirill.foxgame.logic.FoxGame;
+import ru.kirill.foxgame.model.*;
+import ru.kirill.foxgame.view.GameFrame;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,7 +12,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * Основной контроллер, связывающий модель, представление и логику игры.
+ * Главный контроллер игры, связывающий модель, представление и логику.
+ * Обрабатывает пользовательский ввод, управляет ходом игры и AI противника.
  */
 public class GameController {
     private FoxGame game;
@@ -21,6 +22,12 @@ public class GameController {
     private boolean isAITurn;
     private final Random random = new Random();
     
+    /**
+     * Создает контроллер для управления игрой.
+     *
+     * @param game экземпляр игры (модель и логика)
+     * @param view главное окно приложения (представление)
+     */
     public GameController(FoxGame game, GameFrame view) {
         this.game = game;
         this.view = view;
@@ -44,7 +51,8 @@ public class GameController {
     }
     
     /**
-     * Запускает новую игру.
+     * Запускает новую игру, сбрасывая все прогресс.
+     * Отменяет текущую игру и начинает новую с начальными параметрами.
      */
     private void startNewGame() {
         // Создаем новую игру
@@ -71,7 +79,9 @@ public class GameController {
     }
     
     /**
-     * Обрабатывает ход игрока 1 (человека).
+     * Обрабатывает ход игрока-человека.
+     *
+     * @param card карта, которую хочет сыграть игрок
      */
     private void handlePlayerMove(Card card) {
         if (isAITurn) {
@@ -109,7 +119,8 @@ public class GameController {
     }
     
     /**
-     * Обрабатывает ход AI (игрока 2).
+     * Обрабатывает ход AI-противника.
+     * Использует простую стратегию для выбора карты.
      */
     private void handleAIMove() {
         if (!isAITurn) return;
@@ -148,7 +159,10 @@ public class GameController {
     }
     
     /**
-     * Выбирает карту для AI на основе простой стратегии.
+     * Выбирает карту для AI на основе доступных ходов.
+     *
+     * @param validMoves список карт, которые AI может легально сыграть
+     * @return выбранная карта для хода AI
      */
     private Card selectAICard(List<Card> validMoves) {
         if (validMoves.isEmpty()) {
@@ -200,7 +214,9 @@ public class GameController {
     }
     
     /**
-     * Планирует ход AI через указанное время.
+     * Планирует выполнение хода AI через указанную задержку.
+     *
+     * @param delay задержка в миллисекундах перед ходом AI
      */
     private void scheduleAIMove(int delay) {
         aiTimer.schedule(new TimerTask() {
@@ -215,6 +231,7 @@ public class GameController {
     
     /**
      * Обрабатывает завершение игры.
+     * Показывает результаты и предлагает начать новую игру.
      */
     private void handleGameOver() {
         Player winner = game.getWinner();
@@ -237,7 +254,7 @@ public class GameController {
     }
     
     /**
-     * Показывает правила игры.
+     * Показывает правила игры в диалоговом окне.
      */
     private void showRules() {
         String rules = """
@@ -283,13 +300,14 @@ public class GameController {
     // Внутренние классы-слушатели
     
     /**
-     * Слушатель для кликов по картам.
-     */
+ * Слушатель для обработки кликов по картам игрока.
+ * Когда игрок кликает по карте, этот слушатель обрабатывает ход.
+ */
     private class CardClickListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (e.getSource() instanceof ru.kirill.oop_task2_2.view.CardComponent) {
-                ru.kirill.oop_task2_2.view.CardComponent cardComponent = (ru.kirill.oop_task2_2.view.CardComponent) e.getSource();
+            if (e.getSource() instanceof ru.kirill.foxgame.view.CardComponent) {
+                ru.kirill.foxgame.view.CardComponent cardComponent = (ru.kirill.foxgame.view.CardComponent) e.getSource();
                 Card card = cardComponent.getCard();
                 
                 if (card != null) {
@@ -300,9 +318,15 @@ public class GameController {
     }
     
     /**
-     * Слушатель для кнопки "Новая игра".
-     */
+ * Слушатель для кнопки "Новая игра".
+ * Начинает новую игру после подтверждения пользователем.
+ */
     private class NewGameListener implements ActionListener {
+        /**
+         * Обрабатывает нажатие кнопки "Новая игра".
+         *
+         * @param e событие ActionEvent от кнопки
+         */
         @Override
         public void actionPerformed(ActionEvent e) {
             int choice = JOptionPane.showConfirmDialog(
@@ -321,8 +345,14 @@ public class GameController {
     
     /**
      * Слушатель для кнопки "Правила".
+     * Показывает диалоговое окно с правилами игры.
      */
     private class RulesListener implements ActionListener {
+        /**
+         * Обрабатывает нажатие кнопки "Правила".
+         *
+         * @param e событие ActionEvent от кнопки
+         */
         @Override
         public void actionPerformed(ActionEvent e) {
             showRules();
@@ -330,7 +360,8 @@ public class GameController {
     }
     
     /**
-     * Завершает работу контроллера.
+     * Освобождает ресурсы контроллера.
+     * Отменяет все запланированные задачи и таймеры.
      */
     public void dispose() {
         if (aiTimer != null) {
